@@ -1,0 +1,39 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: curriculum-intelligence-backend-test
+
+  datasource:
+    url: jdbc:h2:mem:curriculum_test;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE
+    username: sa
+    password: ''
+    driver-class-name: org.h2.Driver
+
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
+
+  flyway:
+    enabled: false
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always
+
+app:
+  cors:
+    allowed-origins: http://localhost:5173,http://localhost:3000
+  llm:
+    provider: disabled
+  institution:
+    default-name: Test University
+    default-department: Computer Science & Engineering

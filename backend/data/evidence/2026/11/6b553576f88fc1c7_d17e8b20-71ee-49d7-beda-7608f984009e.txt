@@ -1,0 +1,5 @@
+# Core Transformer Architectures
+The Transformer model relies on self-attention mechanisms to compute representations of input sequences without sequence-aligned recurrent operations.
+
+# Retrieval-Augmented Generation
+RAG combines non-parametric dense vector index retrieval with generative language models to produce grounded academic curriculum recommendations.

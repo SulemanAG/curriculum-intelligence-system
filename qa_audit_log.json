@@ -1,0 +1,26 @@
+{
+  "errors": [],
+  "consoleLogs": [
+    "[debug] [vite] connecting...",
+    "[debug] [vite] connected.",
+    "[info] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold",
+    "[error] Access to fetch at 'http://localhost:8080/api/health' from origin 'http://localhost:5173' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. If an opaque response serves your needs, set the request's mode to 'no-cors' to fetch the resource with CORS disabled.",
+    "[error] Failed to load resource: net::ERR_FAILED",
+    "[error] Access to fetch at 'http://localhost:8080/api/health' from origin 'http://localhost:5173' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. If an opaque response serves your needs, set the request's mode to 'no-cors' to fetch the resource with CORS disabled.",
+    "[error] Failed to load resource: net::ERR_FAILED",
+    "[error] Access to fetch at 'http://localhost:8080/api/curriculum/requests' from origin 'http://localhost:5173' has been blocked by CORS policy: Response to preflight request doesn't pass access control check: No 'Access-Control-Allow-Origin' header is present on the requested resource. If an opaque response serves your needs, set the request's mode to 'no-cors' to fetch the resource with CORS disabled.",
+    "[error] Failed to load resource: net::ERR_FAILED",
+    "[error] Access to fetch at 'http://localhost:8080/api/curriculum/feedback' from origin 'http://localhost:5173' has been blocked by CORS policy: Response to preflight request doesn't pass access control check: No 'Access-Control-Allow-Origin' header is present on the requested resource. If an opaque response serves your needs, set the request's mode to 'no-cors' to fetch the resource with CORS disabled.",
+    "[error] Failed to load resource: net::ERR_FAILED",
+    "[error] Access to fetch at 'http://localhost:8080/api/curriculum/plans/PLAN-KLE-ALT-3-0891/pdf' from origin 'http://localhost:5173' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. If an opaque response serves your needs, set the request's mode to 'no-cors' to fetch the resource with CORS disabled.",
+    "[error] Failed to load resource: net::ERR_FAILED",
+    "[debug] [vite] connecting...",
+    "[debug] [vite] connected.",
+    "[info] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold",
+    "[error] Access to fetch at 'http://localhost:8080/api/health' from origin 'http://localhost:5173' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. If an opaque response serves your needs, set the request's mode to 'no-cors' to fetch the resource with CORS disabled.",
+    "[error] Failed to load resource: net::ERR_FAILED",
+    "[error] Access to fetch at 'http://localhost:8080/api/health' from origin 'http://localhost:5173' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. If an opaque response serves your needs, set the request's mode to 'no-cors' to fetch the resource with CORS disabled.",
+    "[error] Failed to load resource: net::ERR_FAILED"
+  ],
+  "timestamp": "2026-11-11T10:05:44.360Z"
+}

@@ -1,0 +1,45 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: curriculumai-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-curriculum_ai}
+      POSTGRES_USER: ${POSTGRES_USER:-curriculum_admin}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-curriculum_secret_2026}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-curriculum_admin} -d ${POSTGRES_DB:-curriculum_ai}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: curriculumai-backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      SERVER_PORT: ${SERVER_PORT:-8081}
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-curriculum_ai}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-curriculum_admin}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-curriculum_secret_2026}
+      APP_CORS_ALLOWED_ORIGINS: ${APP_CORS_ALLOWED_ORIGINS:-http://localhost:5173,http://127.0.0.1:5173,http://localhost:3000}
+      LLM_PROVIDER: ${LLM_PROVIDER:-disabled}
+      LLM_API_KEY: ${LLM_API_KEY:-}
+    ports:
+      - "${SERVER_PORT:-8081}:8081"
+
+volumes:
+  postgres_data:
+
