@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.curriculumai.common.ApiResponse;
 import org.curriculumai.coordinator.dto.*;
+import org.curriculumai.orchestration.llm.LlmExecutionService;
 import org.curriculumai.security.UserIdentityResolver;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -13,6 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.nio.charset.StandardCharsets;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -23,10 +25,17 @@ public class CurriculumController {
 
     private final AuraCoordinatorService coordinatorService;
     private final UserIdentityResolver userIdentityResolver;
+    private final KleTechDocumentService documentService;
+    private final LlmExecutionService llmExecutionService;
 
-    public CurriculumController(AuraCoordinatorService coordinatorService, UserIdentityResolver userIdentityResolver) {
+    public CurriculumController(AuraCoordinatorService coordinatorService,
+                                UserIdentityResolver userIdentityResolver,
+                                KleTechDocumentService documentService,
+                                LlmExecutionService llmExecutionService) {
         this.coordinatorService = coordinatorService;
         this.userIdentityResolver = userIdentityResolver;
+        this.documentService = documentService;
+        this.llmExecutionService = llmExecutionService;
     }
 
     private String resolveUserId(String userId) {
@@ -87,18 +96,58 @@ public class CurriculumController {
             @PathVariable("planId") String planId
     ) {
         FinalPlanResponse plan = coordinatorService.getFinalCoursePlan(planId);
-        String dummyPdfContent = "%PDF-1.4\n% Curriculum AI Governed Document Export\n" +
-                "Course: " + plan.courseTitle() + "\n" +
-                "Institution: " + plan.institution() + "\n" +
-                "Audit Trail ID: " + plan.auditTrailId() + "\n" +
-                "%%EOF";
-
-        byte[] pdfBytes = dummyPdfContent.getBytes(StandardCharsets.UTF_8);
+        byte[] pdfBytes = documentService.generatePdf(plan);
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + plan.courseCode() + "_Course_Plan.pdf\"")
                 .contentType(MediaType.APPLICATION_PDF)
                 .body(pdfBytes);
+    }
+
+    @GetMapping("/plans/{planId}/docx")
+    @Operation(summary = "Download or verify the compiled course plan DOCX document")
+    public ResponseEntity<byte[]> downloadDocx(
+            @PathVariable("planId") String planId
+    ) {
+        FinalPlanResponse plan = coordinatorService.getFinalCoursePlan(planId);
+        byte[] docxBytes = documentService.generateDocx(plan);
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + plan.courseCode() + "_Course_Plan.docx\"")
+                .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.wordprocessingml.document"))
+                .body(docxBytes);
+    }
+
+    @GetMapping("/llm/status")
+    @Operation(summary = "Retrieve current LLM provider health, active routing, and failover status")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> getLlmStatus() {
+        Map<String, Object> status = new LinkedHashMap<>();
+        status.put("primaryProvider", llmExecutionService.getProviderName());
+        status.put("activeProvider", llmExecutionService.getLastExecutedProvider());
+        status.put("activeModel", llmExecutionService.getLastExecutedModel());
+        status.put("available", llmExecutionService.isAvailable());
+        status.put("lastExecution", llmExecutionService.getLastExecutionDetails());
+
+        Map<String, Object> providersMap = new LinkedHashMap<>();
+        llmExecutionService.getHealthTracker().getAllHealth().forEach((name, health) -> {
+            Map<String, Object> h = new LinkedHashMap<>();
+            h.put("providerName", health.getProviderName());
+            h.put("modelName", health.getModelName());
+            h.put("configured", health.isConfigured());
+            h.put("circuitState", health.getCircuitState().name());
+            h.put("consecutiveFailures", health.getConsecutiveFailures());
+            h.put("lastSuccess", health.getLastSuccessTime() != null ? health.getLastSuccessTime().toString() : null);
+            h.put("lastFailure", health.getLastFailureTime() != null ? health.getLastFailureTime().toString() : null);
+            h.put("lastHttpStatus", health.getLastStatusCode());
+            h.put("lastErrorCategory", health.getLastErrorCategory() != null ? health.getLastErrorCategory().name() : null);
+            h.put("totalRequests", health.getTotalRequests());
+            h.put("totalSuccesses", health.getTotalSuccesses());
+            h.put("totalFailures", health.getTotalFailures());
+            providersMap.put(name, h);
+        });
+        status.put("providers", providersMap);
+
+        return ResponseEntity.ok(ApiResponse.ok(status, "LLM provider runtime status retrieved"));
     }
 }
 

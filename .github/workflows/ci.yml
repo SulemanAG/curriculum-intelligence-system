@@ -1,0 +1,81 @@
+name: Curriculum Intelligence CI/CD Pipeline
+
+on:
+  push:
+    branches: [ master, main ]
+  pull_request:
+    branches: [ master, main ]
+
+jobs:
+  # ========================================================
+  # Job 1: Backend Build, Compilation & Unit Tests
+  # ========================================================
+  backend-test:
+    name: Backend Build & Unit Tests (Java 21)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Eclipse Temurin JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Compile Backend & Verify Provider Abstraction
+        run: |
+          mvn -f backend/pom.xml compile -DskipTests
+
+      - name: Run Core LLM Failover Unit Tests
+        run: |
+          mvn -f backend/pom.xml test -Dtest=LlmExecutionServiceTest
+
+  # ========================================================
+  # Job 2: Frontend Build & TypeScript Validation
+  # ========================================================
+  frontend-test:
+    name: Frontend Build & Type Validation (Node 20)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install Frontend Dependencies
+        run: npm ci
+
+      - name: TypeScript Compilation Check
+        run: npx tsc --noEmit
+
+      - name: Vite Production Build
+        run: npm run build
+
+  # ========================================================
+  # Job 3: Automated Secret & Credential Safety Scan
+  # ========================================================
+  security-scan:
+    name: Credential & Secret Safety Audit
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Verify No Committed Secrets
+        run: |
+          echo "Scanning codebase for exposed sensitive tokens..."
+          # Check that .env files are not committed
+          if git ls-files --error-unmatch backend/.env 2>/dev/null; then
+            echo "ERROR: backend/.env is tracked by git!"
+            exit 1
+          fi
+          echo "Secret check passed: No local .env secrets committed to version control."

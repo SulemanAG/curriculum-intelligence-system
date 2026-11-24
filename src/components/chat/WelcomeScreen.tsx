@@ -8,24 +8,24 @@ interface WelcomeScreenProps {
 export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onSelectPrompt }) => {
   const suggestedPrompts = [
     {
-      title: 'Computer Vision',
-      prompt: 'I need to design a course plan for Computer Vision.',
-      description: 'Benchmarks camera geometry, deep CNNs, and vision transformers with industry demand.'
+      title: 'Design Course Plan',
+      prompt: 'Design a course plan for Computer Vision.',
+      description: 'Coordinates academic mapping, industry demand, and outcome taxonomy for Computer Vision.'
     },
     {
-      title: 'Natural Language Processing',
-      prompt: 'Course plan for Natural Language Processing for 6th semester B.Tech.',
-      description: 'Aligns LLMs, tokenization, and sequence models against ACM CS2023 standards.'
+      title: 'Analyse Curriculum',
+      prompt: 'Analyse the existing Data Structures curriculum.',
+      description: 'Reviews prerequisites, algorithmic rigor, and alignment with modern software engineering.'
     },
     {
-      title: 'Agentic AI Systems',
-      prompt: 'Prepare syllabus for Agentic AI Systems aligned with ACM and APNI standards.',
-      description: 'Covers Coordinator-plus-workers architecture, tool use, and safety governance.'
+      title: 'Benchmark Course',
+      prompt: 'Benchmark an Agentic AI course against leading universities.',
+      description: 'Evaluates multi-agent architectures and autonomous decision systems against ACM CS2023.'
     },
     {
-      title: 'Edge Computing & IoT',
-      prompt: 'Design an undergraduate course on Edge Computing and IoT Networks.',
-      description: 'Synthesizes embedded inference, low-power protocols, and real-time sensor pipelines.'
+      title: 'Identify Skill Gaps',
+      prompt: 'Identify industry skill gaps in a Machine Learning course.',
+      description: 'Triangulates institutional course coverage against live employer skill requirements.'
     }
   ];
 
@@ -36,11 +36,11 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onSelectPrompt }) 
         <BookOpen className="w-6 h-6 text-brand-200" />
       </div>
 
-      <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-slate-900 mb-2">
-        What course would you like to design today?
+      <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 mb-3">
+        Curriculum Intelligence System
       </h1>
-      <p className="text-sm text-slate-500 max-w-md mx-auto mb-8 font-normal leading-relaxed">
-        Curriculum AI automatically researches industry requirements, benchmarks IIT/NIT syllabi, and drafts evidence-grounded course plans.
+      <p className="text-sm text-slate-600 max-w-lg mx-auto mb-8 font-normal leading-relaxed">
+        Describe the course you want to design, analyse or improve. AURA will coordinate academic mapping, industry research, benchmarking, gap analysis and course-plan recommendations.
       </p>
 
       {/* Suggested Prompts Cards (Claude / ChatGPT style) */}

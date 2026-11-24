@@ -39,3 +39,13 @@ coverage/
 .DS_Store
 Thumbs.db
 
+# Backend Runtime & Test Artifacts
+backend/target/
+backend/data/
+target/
+test_*.docx
+test_*.pdf
+*.docx
+*.pdf
+!KLE_Tech_Course_Plan_Blank_Template_No_Marks_Scheme.docx
+

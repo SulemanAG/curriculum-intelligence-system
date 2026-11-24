@@ -12,7 +12,46 @@ import org.springframework.context.annotation.Bean;
 public class CurriculumAiApplication {
 
     public static void main(String[] args) {
+        loadDotEnvIfPresent();
         SpringApplication.run(CurriculumAiApplication.class, args);
+    }
+
+    private static void loadDotEnvIfPresent() {
+        java.io.File envFile = new java.io.File(".env");
+        if (!envFile.exists()) {
+            envFile = new java.io.File("backend/.env");
+        }
+        if (!envFile.exists()) {
+            envFile = new java.io.File("../backend/.env");
+        }
+        if (envFile.exists()) {
+            try (java.io.BufferedReader reader = new java.io.BufferedReader(new java.io.FileReader(envFile))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    line = line.trim();
+                    if (!line.startsWith("#") && line.contains("=")) {
+                        int eq = line.indexOf('=');
+                        String key = line.substring(0, eq).trim();
+                        String val = line.substring(eq + 1).trim();
+                        // Local application .env takes precedence over host environment variables
+                        System.setProperty(key, val);
+                        if ("DB_URL".equals(key)) {
+                            System.setProperty("spring.datasource.url", val);
+                        } else if ("DB_USERNAME".equals(key)) {
+                            System.setProperty("spring.datasource.username", val);
+                        } else if ("DB_PASSWORD".equals(key)) {
+                            System.setProperty("spring.datasource.password", val);
+                        } else if ("GROQ_API_KEY".equals(key)) {
+                            System.setProperty("app.llm.apiKey", val);
+                        } else if ("GROQ_MODEL".equals(key)) {
+                            System.setProperty("app.llm.model", val);
+                        } else if ("GROQ_BASE_URL".equals(key)) {
+                            System.setProperty("app.llm.baseUrl", val);
+                        }
+                    }
+                }
+            } catch (Exception ignored) {}
+        }
     }
 
     @Bean

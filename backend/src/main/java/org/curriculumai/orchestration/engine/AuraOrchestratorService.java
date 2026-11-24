@@ -143,6 +143,10 @@ public class AuraOrchestratorService {
                 .collect(Collectors.toList());
     }
 
+    public void evaluateAndDispatch(String runId) {
+        taskExecutionEngine.evaluateAndDispatch(runId);
+    }
+
     @Transactional
     public RunOverviewDto cancelRun(String runId, String userId) {
         getRunAndVerifyOwner(runId, userId);

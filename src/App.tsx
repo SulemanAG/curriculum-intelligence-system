@@ -5,7 +5,8 @@ import {
   NavigationDestination,
   LibraryDocument,
   ScheduledTask,
-  UserFeedback
+  UserFeedback,
+  FinalCoursePlan
 } from './types';
 import { Sidebar } from './components/layout/Sidebar';
 import { ChatHeader } from './components/layout/ChatHeader';
@@ -16,6 +17,7 @@ import { LibraryPage } from './pages/LibraryPage';
 import { ScheduledPage } from './pages/ScheduledPage';
 import { OtherToolsPage } from './pages/OtherToolsPage';
 import { ProfilePage } from './pages/ProfilePage';
+import { LandingPage } from './pages/LandingPage';
 import { apiClient } from './services/api';
 import {
   SCHEMA_VERIFICATION_ALTERNATIVES,
@@ -26,8 +28,47 @@ import { generateConversationTitle } from './utils/titleGenerator';
 const INITIAL_CONVERSATIONS_KEY = 'curriculum_ai_conversations_v1';
 
 export const App: React.FC = () => {
-  // Navigation State
+  // Top-Level Route State: '/' => 'landing', '/app' => 'app'
+  const [route, setRoute] = useState<'landing' | 'app'>(() => {
+    if (typeof window !== 'undefined') {
+      const path = window.location.pathname;
+      if (path === '/app' || path.startsWith('/app/')) {
+        return 'app';
+      }
+    }
+    return 'landing';
+  });
+
+  // Navigation State inside Workspace
   const [currentView, setCurrentView] = useState<NavigationDestination>('chat');
+
+  // Listen for browser Back / Forward buttons (HTML5 History API)
+  useEffect(() => {
+    const handlePopState = () => {
+      const path = window.location.pathname;
+      if (path === '/app' || path.startsWith('/app/')) {
+        setRoute('app');
+      } else {
+        setRoute('landing');
+      }
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  const navigateToApp = () => {
+    if (window.location.pathname !== '/app') {
+      window.history.pushState({}, '', '/app');
+    }
+    setRoute('app');
+  };
+
+  const navigateToLanding = () => {
+    if (window.location.pathname !== '/') {
+      window.history.pushState({}, '', '/');
+    }
+    setRoute('landing');
+  };
 
   // Sidebar Layout State
   const [isOpenMobile, setIsOpenMobile] = useState<boolean>(false);
@@ -311,67 +352,68 @@ export const App: React.FC = () => {
     appendMessage(assistantMsg);
     setIsLoading(false);
 
-    // Execute stage transitions in chat
-    setTimeout(() => {
-      updateLastAssistantMessage((msg) => {
-        if (!msg.researchRun) return msg;
-        const stages = [...msg.researchRun.stages];
-        stages[0].status = 'completed';
-        stages[0].message = 'Plan locked: constraints and outcomes established.';
-        stages[1].status = 'running';
-        stages[1].message = 'Executing 3 specialist agents in parallel...';
-        if (stages[1].parallelAgents) {
-          stages[1].parallelAgents[0].status = 'running';
-          stages[1].parallelAgents[0].message = 'Extracting course outcomes...';
-          stages[1].parallelAgents[1].status = 'running';
-          stages[1].parallelAgents[1].message = 'Mining real-time industry skill vectors...';
-          stages[1].parallelAgents[2].status = 'running';
-          stages[1].parallelAgents[2].message = 'Querying ACM CS2023 & IIT/NIT syllabi...';
-        }
-        return {
-          ...msg,
-          researchRun: {
-            ...msg.researchRun,
-            currentStageId: 'parallel_view_building',
-            elapsedSeconds: 2,
-            stages
-          }
-        };
-      });
-    }, 1200);
+    // Submit real request to backend and initiate multi-agent workflow
+    let activeRunId = runId;
+    try {
+      const resp = await apiClient.submitCourseRequest(text);
+      if (resp.success && resp.data?.id) {
+        activeRunId = resp.data.id;
+      }
+    } catch (err) {
+      console.warn('Backend request submission error:', err);
+    }
 
-    setTimeout(() => {
-      updateLastAssistantMessage((msg) => {
-        if (!msg.researchRun) return msg;
-        const stages = [...msg.researchRun.stages];
-        stages[1].status = 'completed';
-        stages[1].message = 'All 3 parallel views built successfully with verified citations.';
-        if (stages[1].parallelAgents) {
-          stages[1].parallelAgents[0].status = 'completed';
-          stages[1].parallelAgents[1].status = 'completed';
-          stages[1].parallelAgents[2].status = 'completed';
-        }
-        stages[2].status = 'completed';
-        stages[2].message = 'Identified key topics, outdated modules, and industry skill additions.';
-        stages[3].status = 'completed';
-        stages[3].message = 'Drafted 4 distinct pedagogical strategies.';
-        stages[4].status = 'completed';
-        stages[4].message = '100% of automated validation checks passed.';
-        stages[5].status = 'awaiting_human_input';
-        stages[5].message = 'Awaiting faculty inspection. Real data requires Spring Boot backend.';
-        return {
-          ...msg,
-          content: `Research synthesis complete for "${text}". I have evaluated the industry skill demand, institutional benchmarks (IIT Bombay, IIT Madras), and ACM CS2023 knowledge areas.\n\nTo inspect the 4 alternative curriculum proposals, click "Inspect Schema Preview" below or connect the backend service.`,
-          researchRun: {
-            ...msg.researchRun,
-            currentStageId: 'human_review_gate',
-            status: 'awaiting_human_input',
-            elapsedSeconds: 5,
-            stages
+    // Real-time polling loop
+    let attempts = 0;
+    const maxAttempts = 60; // Poll for up to ~2.5 minutes
+    const pollInterval = setInterval(async () => {
+      attempts++;
+      try {
+        const runResp = await apiClient.getResearchRun(activeRunId);
+        if (runResp.success && runResp.data) {
+          const run = runResp.data;
+          updateLastAssistantMessage((msg) => {
+            if (!msg.researchRun) return msg;
+            return {
+              ...msg,
+              researchRun: {
+                ...msg.researchRun,
+                currentStageId: run.currentStageId || msg.researchRun.currentStageId,
+                status: run.status || msg.researchRun.status,
+                elapsedSeconds: run.elapsedSeconds || (attempts * 2),
+                stages: run.stages && run.stages.length > 0 ? run.stages : msg.researchRun.stages
+              }
+            };
+          });
+
+          // Check if ready for faculty inspection
+          if (run.status === 'awaiting_human_input' || run.status === 'completed' || attempts >= maxAttempts) {
+            clearInterval(pollInterval);
+            setIsLoading(false);
+
+            // Fetch genuine dynamic alternatives synthesized by RecommendationAgent
+            const altsResp = await apiClient.getCourseAlternatives(activeRunId);
+            if (altsResp.success && altsResp.data && altsResp.data.length > 0) {
+              const liveAlts = altsResp.data;
+              updateLastAssistantMessage((msg) => ({
+                ...msg,
+                content: `Real-time multi-agent research complete for "${text}". The AURA Coordinator and specialist agents have analyzed live industry skills, benchmarked institutional syllabi, and synthesized four distinct course-plan proposals.\n\nPlease inspect the proposals below and record your faculty preference:`,
+                payloadType: 'alternatives',
+                alternatives: liveAlts,
+                selectedAlternativeId: liveAlts[0]?.id,
+                isDevPreview: false
+              }));
+            }
           }
-        };
-      });
-    }, 2800);
+        }
+      } catch (pollErr) {
+        console.warn('Polling error:', pollErr);
+        if (attempts >= maxAttempts) {
+          clearInterval(pollInterval);
+          setIsLoading(false);
+        }
+      }
+    }, 2500);
   };
 
   // Handler: Explicitly Load Schema Preview for Alternatives
@@ -419,17 +461,36 @@ export const App: React.FC = () => {
   const handleSubmitFeedback = async (feedback: UserFeedback) => {
     setIsLoading(true);
 
-    // Call API client
-    await apiClient.submitSelectionFeedback(feedback);
+    let planId = '';
+    try {
+      const res = await apiClient.submitSelectionFeedback(feedback);
+      if (res.success && res.data?.finalPlanId) {
+        planId = res.data.finalPlanId;
+      }
+    } catch (err) {
+      console.error('Feedback submission error:', err);
+    }
+
+    let finalPlanFromBackend: FinalCoursePlan | null = null;
+    if (planId) {
+      try {
+        const planRes = await apiClient.getFinalCoursePlan(planId);
+        if (planRes.success && planRes.data) {
+          finalPlanFromBackend = planRes.data;
+        }
+      } catch (err) {
+        console.warn('Could not fetch final plan directly from backend:', err);
+      }
+    }
 
     updateLastAssistantMessage((msg) => {
       const selectedAlt =
         msg.alternatives?.find((a) => a.id === feedback.selectedAlternativeId) ||
         SCHEMA_VERIFICATION_ALTERNATIVES[2];
 
-      const generatedPlan = {
+      const generatedPlan = finalPlanFromBackend || {
         ...SCHEMA_VERIFICATION_FINAL_PLAN,
-        id: 'PLAN-KLE-' + selectedAlt.code + '-' + Date.now().toString().slice(-4),
+        id: planId || ('PLAN-KLE-' + selectedAlt.code + '-' + Date.now().toString().slice(-4)),
         selectedAlternativeId: selectedAlt.id,
         courseTitle: selectedAlt.title.replace(/\[Schema Preview\]\s*/i, ''),
         credits: selectedAlt.credits,
@@ -453,8 +514,9 @@ export const App: React.FC = () => {
         courseTitle: generatedPlan.courseTitle,
         department: generatedPlan.department,
         generatedDate: new Date().toISOString(),
-        fileSize: '142 KB',
-        isAvailable: true
+        fileSize: '479 KB',
+        isAvailable: true,
+        downloadUrl: `/api/curriculum/plans/${generatedPlan.id}/pdf`
       };
       setLibraryDocs((prev) => [newDoc, ...prev]);
 
@@ -482,6 +544,12 @@ export const App: React.FC = () => {
     handleSendMessage(enriched);
   };
 
+  // 1. If currently at root '/' or landing route, render Landing Page
+  if (route === 'landing') {
+    return <LandingPage onGetStarted={navigateToApp} />;
+  }
+
+  // 2. If at '/app', render the full curriculum design workspace
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-white text-slate-900 font-sans">
       {/* 1. Persistent Collapsible Left Sidebar */}
@@ -499,6 +567,7 @@ export const App: React.FC = () => {
         onCloseMobile={() => setIsOpenMobile(false)}
         isCollapsedDesktop={isCollapsedDesktop}
         onToggleCollapseDesktop={() => setIsCollapsedDesktop(!isCollapsedDesktop)}
+        onNavigateToLanding={navigateToLanding}
       />
 
       {/* 2. Main Content Workspace */}
@@ -511,6 +580,7 @@ export const App: React.FC = () => {
           onClearConversation={handleClearConversation}
           onRenameConversation={handleRenameConversation}
           onExportConversation={handleExportConversation}
+          onNavigateToLanding={navigateToLanding}
         />
 
         {/* View Routing */}

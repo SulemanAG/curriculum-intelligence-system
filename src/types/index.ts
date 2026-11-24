@@ -300,3 +300,36 @@ export interface ScheduledTask {
   status: 'active' | 'paused' | 'completed';
 }
 
+export interface LlmProviderDetail {
+  providerName: string;
+  modelName: string;
+  configured: boolean;
+  circuitState: 'CLOSED' | 'OPEN' | 'HALF_OPEN';
+  consecutiveFailures: number;
+  lastSuccess?: string | null;
+  lastFailure?: string | null;
+  lastHttpStatus?: number;
+  lastErrorCategory?: string | null;
+  totalRequests: number;
+  totalSuccesses: number;
+  totalFailures: number;
+}
+
+export interface LlmExecutionDetail {
+  providerName: string;
+  modelName: string;
+  failoverOccurred: boolean;
+  failoverFrom?: string | null;
+  statusCode: number;
+  durationMs: number;
+}
+
+export interface LlmStatus {
+  primaryProvider: string;
+  activeProvider: string;
+  activeModel: string;
+  available: boolean;
+  lastExecution?: LlmExecutionDetail;
+  providers: Record<string, LlmProviderDetail>;
+}
+

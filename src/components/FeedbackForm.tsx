@@ -8,6 +8,7 @@ import { CoursePlanAlternative, UserFeedback } from '../types';
 interface FeedbackFormProps {
   selectedAlternative: CoursePlanAlternative;
   allAlternatives: CoursePlanAlternative[];
+  runId?: string;
   onSubmitFeedback: (feedback: UserFeedback) => void;
   onBackToComparison: () => void;
   isSubmitting?: boolean;
@@ -16,6 +17,7 @@ interface FeedbackFormProps {
 export const FeedbackForm: React.FC<FeedbackFormProps> = ({
   selectedAlternative,
   allAlternatives,
+  runId,
   onSubmitFeedback,
   onBackToComparison,
   isSubmitting = false
@@ -32,8 +34,17 @@ export const FeedbackForm: React.FC<FeedbackFormProps> = ({
       .filter((alt) => alt.id !== selectedAlternative.id)
       .map((alt) => alt.id);
 
+    // Resolve valid runId for backend foreign key integrity
+    let resolvedRunId = runId;
+    if (!resolvedRunId && selectedAlternative.id.startsWith('alt-')) {
+      const parts = selectedAlternative.id.split('-');
+      if (parts.length >= 3) {
+        resolvedRunId = parts.slice(1, -1).join('-');
+      }
+    }
+
     const feedbackPayload: UserFeedback = {
-      requestId: 'req-' + Date.now(),
+      requestId: resolvedRunId || selectedAlternative.id,
       selectedAlternativeId: selectedAlternative.id,
       rejectedAlternativeIds: rejectedIds,
       facultyName: facultyName.trim() || undefined,

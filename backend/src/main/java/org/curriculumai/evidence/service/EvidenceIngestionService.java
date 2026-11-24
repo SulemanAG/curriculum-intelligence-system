@@ -158,6 +158,31 @@ public class EvidenceIngestionService {
         return mapVersionToDto(version);
     }
 
+    @Transactional
+    public SourceVersionDto ingestDirectText(String sourceId, String textContent, String filename, String publicationDate, String userId) {
+        ResearchSource source = sourceRepository.findById(sourceId)
+                .orElseThrow(() -> new ResourceNotFoundException("ResearchSource not found: " + sourceId));
+
+        if (textContent == null || textContent.isBlank()) {
+            throw new IllegalArgumentException("Cannot ingest empty text content.");
+        }
+
+        byte[] bytes = textContent.getBytes(java.nio.charset.StandardCharsets.UTF_8);
+        String contentHash = computeSha256(bytes);
+        String actualFilename = (filename != null && !filename.isBlank()) ? filename : "research_document.txt";
+
+        SourceVersion version = processSourceBytes(source, null, bytes, "text/plain", actualFilename, publicationDate, contentHash);
+        log.info("Ingested direct text as version '{}' for source '{}' (hash: {})", version.getId(), sourceId, contentHash);
+        return mapVersionToDto(version);
+    }
+
+    public List<String> getChunkIdsForVersion(String versionId) {
+        return documentRepository.findBySourceVersionId(versionId)
+                .map(doc -> chunkRepository.findByExtractedDocumentIdOrderBySequenceNumberAsc(doc.getId())
+                        .stream().map(EvidenceChunk::getId).toList())
+                .orElse(Collections.emptyList());
+    }
+
     /**
      * Common processing pipeline: deduplicate content hash -> store raw bytes -> create version -> extract document -> create chunks.
      */

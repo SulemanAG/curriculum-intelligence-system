@@ -101,6 +101,7 @@ export const ChatMessageItem: React.FC<ChatMessageItemProps> = ({
                   message.alternatives[0]
                 }
                 allAlternatives={message.alternatives}
+                runId={message.researchRun?.id}
                 onSubmitFeedback={onSubmitFeedback || (() => {})}
                 onBackToComparison={onBackToAlternatives || (() => {})}
               />

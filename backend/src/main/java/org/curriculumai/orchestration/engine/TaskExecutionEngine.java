@@ -220,8 +220,17 @@ public class TaskExecutionEngine implements DisposableBean {
      */
     public void executeSingleTask(String taskId) {
         try {
-            WorkflowTask task = taskRepository.findById(taskId).orElse(null);
+            WorkflowTask task = null;
+            for (int retry = 0; retry < 10; retry++) {
+                task = taskRepository.findById(taskId).orElse(null);
+                if (task != null) break;
+                try {
+                    Thread.sleep(150);
+                } catch (InterruptedException ignored) {}
+            }
+
             if (task == null) {
+                log.warn("Task {} not found after waiting for transaction commit.", taskId);
                 return;
             }
 
@@ -301,6 +310,52 @@ public class TaskExecutionEngine implements DisposableBean {
                     }
                 }
 
+                // Collect prior completed task outputs for this run
+                Map<String, StructuredAgentResult> priorTaskOutputs = new LinkedHashMap<>();
+                List<WorkflowTask> allTasks = taskRepository.findByRunIdOrderBySequenceOrderAsc(run.getId());
+                for (WorkflowTask otherTask : allTasks) {
+                    if (otherTask.getStatus() == TaskStatus.COMPLETED && otherTask.getOutputPayloadJson() != null) {
+                        try {
+                            Map<String, Object> findings = objectMapper.readValue(
+                                    otherTask.getOutputPayloadJson(),
+                                    new com.fasterxml.jackson.core.type.TypeReference<Map<String, Object>>() {}
+                            );
+
+                            List<String> evidenceRefs = Collections.emptyList();
+                            List<String> limitations = Collections.emptyList();
+                            List<AgentExecutionRecord> execRecs = executionRecordRepository.findByTaskId(otherTask.getId());
+                            if (!execRecs.isEmpty()) {
+                                AgentExecutionRecord lastRec = execRecs.get(execRecs.size() - 1);
+                                if (lastRec.getEvidenceReferencesJson() != null) {
+                                    try {
+                                        evidenceRefs = objectMapper.readValue(lastRec.getEvidenceReferencesJson(), new com.fasterxml.jackson.core.type.TypeReference<List<String>>() {});
+                                    } catch (Exception ignored) {}
+                                }
+                                if (lastRec.getLimitationsJson() != null) {
+                                    try {
+                                        limitations = objectMapper.readValue(lastRec.getLimitationsJson(), new com.fasterxml.jackson.core.type.TypeReference<List<String>>() {});
+                                    } catch (Exception ignored) {}
+                                }
+                            }
+
+                            StructuredAgentResult res = new StructuredAgentResult(
+                                    run.getId(),
+                                    otherTask.getId(),
+                                    otherTask.getAssignedAgentId(),
+                                    "COMPLETED",
+                                    findings,
+                                    evidenceRefs,
+                                    limitations,
+                                    null,
+                                    Map.of("taskKey", otherTask.getTaskKey())
+                            );
+                            priorTaskOutputs.put(otherTask.getTaskKey(), res);
+                        } catch (Exception e) {
+                            log.warn("Failed to deserialize outputPayloadJson for task {}: {}", otherTask.getTaskKey(), e.getMessage());
+                        }
+                    }
+                }
+
                 TaskExecutionContext ctx = new TaskExecutionContext(
                         run.getId(),
                         task.getId(),
@@ -309,7 +364,7 @@ public class TaskExecutionEngine implements DisposableBean {
                         run.getRawPrompt(),
                         academicScope,
                         Collections.emptyMap(),
-                        Collections.emptyMap(),
+                        priorTaskOutputs,
                         Collections.emptyList(),
                         run.getUserId()
                 );
@@ -322,29 +377,83 @@ public class TaskExecutionEngine implements DisposableBean {
                 String limitationsJson = result.limitations() != null ? objectMapper.writeValueAsString(result.limitations()) : null;
                 String metadataJson = result.executionMetadata() != null ? objectMapper.writeValueAsString(result.executionMetadata()) : null;
 
-                task.setStatus(TaskStatus.COMPLETED);
-                task.setCompletedAt(Instant.now());
-                task.setOutputPayloadJson(findingsJson);
-                taskRepository.save(task);
+                if ("BLOCKED".equalsIgnoreCase(result.executionStatus())) {
+                    task.setStatus(TaskStatus.BLOCKED);
+                    task.setErrorType("AGENT_BLOCKED");
+                    task.setErrorMessage(result.errorDetails() != null ? result.errorDetails() : "Task blocked by agent requirement.");
+                    task.setCompletedAt(Instant.now());
+                    task.setOutputPayloadJson(findingsJson);
+                    taskRepository.save(task);
 
-                AgentExecutionRecord record = new AgentExecutionRecord(
-                        UUID.randomUUID().toString(),
-                        task.getRunId(),
-                        task.getId(),
-                        task.getAssignedAgentId(),
-                        task.getAttemptCount(),
-                        result.executionStatus(),
-                        findingsJson,
-                        evidenceJson,
-                        limitationsJson,
-                        result.errorDetails(),
-                        metadataJson,
-                        duration
-                );
-                executionRecordRepository.save(record);
+                    AgentExecutionRecord record = new AgentExecutionRecord(
+                            UUID.randomUUID().toString(),
+                            task.getRunId(),
+                            task.getId(),
+                            task.getAssignedAgentId(),
+                            task.getAttemptCount(),
+                            "BLOCKED",
+                            findingsJson,
+                            evidenceJson,
+                            limitationsJson,
+                            result.errorDetails(),
+                            metadataJson,
+                            duration
+                    );
+                    executionRecordRepository.save(record);
 
-                recordEvent(task.getRunId(), task.getId(), task.getAssignedAgentId(), WorkflowEventType.TASK_COMPLETED,
-                        "Task " + task.getTaskKey() + " completed successfully in " + duration + "ms.", null);
+                    recordEvent(task.getRunId(), task.getId(), task.getAssignedAgentId(), WorkflowEventType.TASK_BLOCKED,
+                            "Task " + task.getTaskKey() + " blocked: " + task.getErrorMessage(), null);
+                } else if ("FAILED".equalsIgnoreCase(result.executionStatus())) {
+                    task.setStatus(TaskStatus.FAILED);
+                    task.setErrorType("AGENT_FAILED");
+                    task.setErrorMessage(result.errorDetails() != null ? result.errorDetails() : "Task execution failed.");
+                    task.setCompletedAt(Instant.now());
+                    task.setOutputPayloadJson(findingsJson);
+                    taskRepository.save(task);
+
+                    AgentExecutionRecord record = new AgentExecutionRecord(
+                            UUID.randomUUID().toString(),
+                            task.getRunId(),
+                            task.getId(),
+                            task.getAssignedAgentId(),
+                            task.getAttemptCount(),
+                            "FAILED",
+                            findingsJson,
+                            evidenceJson,
+                            limitationsJson,
+                            result.errorDetails(),
+                            metadataJson,
+                            duration
+                    );
+                    executionRecordRepository.save(record);
+
+                    recordEvent(task.getRunId(), task.getId(), task.getAssignedAgentId(), WorkflowEventType.TASK_FAILED,
+                            "Task " + task.getTaskKey() + " failed: " + task.getErrorMessage(), null);
+                } else {
+                    task.setStatus(TaskStatus.COMPLETED);
+                    task.setCompletedAt(Instant.now());
+                    task.setOutputPayloadJson(findingsJson);
+                    taskRepository.save(task);
+
+                    AgentExecutionRecord record = new AgentExecutionRecord(
+                            UUID.randomUUID().toString(),
+                            task.getRunId(),
+                            task.getId(),
+                            task.getAssignedAgentId(),
+                            task.getAttemptCount(),
+                            result.executionStatus(),
+                            findingsJson,
+                            evidenceJson,
+                            limitationsJson,
+                            result.errorDetails(),
+                            metadataJson,
+                            duration
+                    );
+                    executionRecordRepository.save(record);
+
+                    recordEvent(task.getRunId(), task.getId(), task.getAssignedAgentId(), WorkflowEventType.TASK_COMPLETED,
+                            "Task " + task.getTaskKey() + " completed successfully in " + duration + "ms.", null);
+                }
 
             } catch (Exception ex) {
                 long duration = System.currentTimeMillis() - startMs;

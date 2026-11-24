@@ -1,29 +1,81 @@
 version: '3.8'
 
-# Curriculum AI - Root Docker Compose for Development
-# Runs PostgreSQL 16 with persistent volume and health check
+# ========================================================
+# Curriculum Intelligence System — Full-Stack Orchestration
+# Services: PostgreSQL 18, Spring Boot 3 Backend, React Frontend
+# ========================================================
 
 services:
+  # 1. Relational & Evidence Vector Database
   postgres:
     image: postgres:16-alpine
     container_name: curriculumai-postgres
     restart: unless-stopped
     environment:
-      POSTGRES_DB: ${POSTGRES_DB:-curriculum_ai}
-      POSTGRES_USER: ${POSTGRES_USER:-curriculum_admin}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-curriculum_secret_2026}
+      POSTGRES_DB: ${POSTGRES_DB:-curriculum_intelligence}
+      POSTGRES_USER: ${POSTGRES_USER:-curriculum_app}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-123}
     ports:
       - "${POSTGRES_PORT:-5432}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-curriculum_admin} -d ${POSTGRES_DB:-curriculum_ai}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-curriculum_app} -d ${POSTGRES_DB:-curriculum_intelligence}"]
       interval: 5s
       timeout: 5s
       retries: 5
       start_period: 5s
+    networks:
+      - curriculum-network
+
+  # 2. Spring Boot Multi-Agent AURA Coordinator Backend
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: curriculumai-backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "8081:8081"
+    environment:
+      SERVER_PORT: 8081
+      DB_URL: jdbc:postgresql://postgres:5432/curriculum_intelligence
+      DB_USERNAME: ${DB_USERNAME:-curriculum_app}
+      DB_PASSWORD: ${DB_PASSWORD:-123}
+      LLM_PRIMARY_PROVIDER: ${LLM_PRIMARY_PROVIDER:-groq}
+      LLM_FAILOVER_ENABLED: ${LLM_FAILOVER_ENABLED:-true}
+      GROQ_API_KEY: ${GROQ_API_KEY:-}
+      GROQ_MODEL: ${GROQ_MODEL:-openai/gpt-oss-120b}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      GEMINI_MODEL: ${GEMINI_MODEL:-gemini-2.5-flash}
+      WEB_SEARCH_PROVIDER: ${WEB_SEARCH_PROVIDER:-google_grounding}
+      EMBEDDING_ENABLED: ${EMBEDDING_ENABLED:-true}
+      EMBEDDING_API_KEY: ${EMBEDDING_API_KEY:-}
+    networks:
+      - curriculum-network
+
+  # 3. React + Vite Web Application Frontend
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    container_name: curriculumai-frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "5173:80"
+    networks:
+      - curriculum-network
 
 volumes:
   postgres_data:
     name: curriculumai_postgres_data
 
+networks:
+  curriculum-network:
+    name: curriculum_network
+    driver: bridge

@@ -13,7 +13,7 @@ spring:
   datasource:
     url: ${DB_URL:${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/curriculum_intelligence}}
     username: ${DB_USERNAME:${POSTGRES_USER:curriculum_app}}
-    password: ${DB_PASSWORD:${POSTGRES_PASSWORD:}}
+    password: ${DB_PASSWORD:${POSTGRES_PASSWORD:123}}
     driver-class-name: org.postgresql.Driver
     hikari:
       maximum-pool-size: 10
@@ -51,20 +51,33 @@ app:
   cors:
     allowed-origins: ${APP_CORS_ALLOWED_ORIGINS:http://localhost:5173,http://127.0.0.1:5173,http://localhost:3000}
   llm:
-    provider: ${LLM_PROVIDER:disabled}
-    model: ${LLM_MODEL:}
-    apiKey: ${LLM_API_KEY:}
+    enabled: ${LLM_ENABLED:true}
+    primary-provider: ${LLM_PRIMARY_PROVIDER:${LLM_PROVIDER:groq}}
+    failover-enabled: ${LLM_FAILOVER_ENABLED:true}
+    timeout-seconds: ${LLM_REQUEST_TIMEOUT_SECONDS:${LLM_TIMEOUT_SECONDS:60}}
+    temperature: ${LLM_TEMPERATURE:0.2}
+    groq:
+      api-key: ${GROQ_API_KEY:${LLM_API_KEY:}}
+      model: ${GROQ_MODEL:openai/gpt-oss-120b}
+      base-url: ${GROQ_BASE_URL:https://api.groq.com/openai/v1}
+    gemini:
+      api-key: ${GEMINI_API_KEY:${LLM_API_KEY:}}
+      model: ${GEMINI_MODEL:gemini-2.5-flash}
+  research:
+    geminiApiKey: ${GEMINI_API_KEY:${LLM_API_KEY:}}
+    geminiModel: ${GEMINI_MODEL:gemini-2.5-flash}
+    openrouterApiKey: ${OPENROUTER_API_KEY:}
   institution:
     default-name: ${DEFAULT_INSTITUTION:KLE Technological University, Belagavi}
     default-department: ${DEFAULT_DEPARTMENT:School of Computer Science & Engineering (AI)}
   embedding:
     enabled: ${EMBEDDING_ENABLED:true}
-    model: ${EMBEDDING_MODEL:BAAI/bge-small-en-v1.5}
-    dimension: ${EMBEDDING_DIMENSION:384}
-    api-url: ${EMBEDDING_API_URL:}
+    model: ${EMBEDDING_MODEL:jina-embeddings-v2-base-en}
+    dimension: ${EMBEDDING_DIMENSION:768}
+    api-url: ${EMBEDDING_API_URL:https://api.jina.ai/v1/embeddings}
     api-key: ${EMBEDDING_API_KEY:}
-    timeout-seconds: ${EMBEDDING_TIMEOUT_SECONDS:15}
-    batch-size: ${EMBEDDING_BATCH_SIZE:32}
+    timeout-seconds: ${EMBEDDING_TIMEOUT_SECONDS:30}
+    batch-size: ${EMBEDDING_BATCH_SIZE:16}
     max-retries: ${EMBEDDING_MAX_RETRIES:3}
     retry-delay-ms: ${EMBEDDING_RETRY_DELAY_MS:1000}
     rrf-constant: ${EMBEDDING_RRF_CONSTANT:60}

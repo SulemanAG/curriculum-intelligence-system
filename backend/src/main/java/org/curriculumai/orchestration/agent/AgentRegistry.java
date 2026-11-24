@@ -99,7 +99,35 @@ public class AgentRegistry {
                 Map.of("category", "RECOMMENDATIONS")
         ));
 
-        log.info("AgentRegistry initialized with 5 planned specialist agent definitions");
+        // 6. MCP Gateway Agent (Model Context Protocol Tool Client)
+        registerDefinition(new AgentDefinition(
+                "mcp-gateway",
+                "MCP Gateway Client",
+                "Standard Model Context Protocol client bridge invoking governed tools",
+                "MCP JSON-RPC 2.0 tool execution",
+                "{\"type\":\"object\"}",
+                "{\"type\":\"object\"}",
+                List.of("academic_catalog_retrieval", "curriculum_version_retrieval", "evidence_keyword_search", "evidence_semantic_search", "evidence_hybrid_search"),
+                AgentStatus.IMPLEMENTED,
+                true,
+                Map.of("category", "MCP_INTEGRATION")
+        ));
+
+        // 7. OpenClaw Gateway Agent
+        registerDefinition(new AgentDefinition(
+                "openclaw-gateway",
+                "OpenClaw Gateway Client",
+                "Governed OpenClaw / OpenCLA external adapter bridging external agentic tasks",
+                "OpenClaw external agent task dispatch and tool invocation",
+                "{\"type\":\"object\"}",
+                "{\"type\":\"object\"}",
+                List.of("academic_catalog_retrieval", "curriculum_version_retrieval", "evidence_keyword_search", "evidence_semantic_search", "evidence_hybrid_search"),
+                AgentStatus.IMPLEMENTED,
+                true,
+                Map.of("category", "OPENCLAW_INTEGRATION")
+        ));
+
+        log.info("AgentRegistry initialized with specialist and gateway agent definitions");
     }
 
     public void registerDefinition(AgentDefinition definition) {

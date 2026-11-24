@@ -25,6 +25,7 @@ interface SidebarProps {
   onCloseMobile: () => void;
   isCollapsedDesktop: boolean;
   onToggleCollapseDesktop: () => void;
+  onNavigateToLanding?: () => void;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -37,7 +38,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
   isOpenMobile,
   onCloseMobile,
   isCollapsedDesktop,
-  onToggleCollapseDesktop
+  onToggleCollapseDesktop,
+  onNavigateToLanding
 }) => {
   return (
     <>
@@ -60,7 +62,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
         <div className="h-14 px-4 flex items-center justify-between border-b border-slate-200/80 bg-[#f8fafc]">
           <div
             className="flex items-center gap-2.5 cursor-pointer overflow-hidden"
-            onClick={() => onNavigate('chat')}
+            onClick={() => onNavigateToLanding ? onNavigateToLanding() : onNavigate('chat')}
+            title="Return to Landing Page"
           >
             <div className="w-8 h-8 rounded-lg bg-brand-800 text-white flex items-center justify-center flex-shrink-0 shadow-2xs">
               <BookOpen className="w-4 h-4 text-brand-200" />

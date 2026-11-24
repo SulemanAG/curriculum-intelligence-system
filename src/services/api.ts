@@ -18,7 +18,8 @@ import {
   CoursePlanAlternative,
   UserFeedback,
   FinalCoursePlan,
-  ValidationReport
+  ValidationReport,
+  LlmStatus
 } from '../types';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8081/api';
@@ -59,6 +60,30 @@ class ApiClient {
       return {
         online: false,
         message: `Backend service not reachable at ${this.baseUrl}. Spring Boot backend service is required for live research.`
+      };
+    }
+  }
+
+  /**
+   * LLM Status & Failover Health Contract
+   * @contract GET /api/curriculum/llm/status
+   * @description Retrieves active LLM provider, failover telemetry, and circuit breaker status
+   */
+  async getLlmStatus(): Promise<ApiResponse<LlmStatus>> {
+    try {
+      const response = await fetch(`${this.baseUrl}/curriculum/llm/status`, {
+        headers: { 'Accept': 'application/json' }
+      });
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+      return await response.json();
+    } catch (err: unknown) {
+      return {
+        success: false,
+        message: err instanceof Error ? err.message : 'Unable to retrieve LLM status',
+        data: undefined,
+        timestamp: new Date().toISOString()
       };
     }
   }
@@ -267,7 +292,6 @@ class ApiClient {
    * @contract GET /api/curriculum/plans/:planId/pdf
    * @description Streams the generated institutional PDF course plan document
    * @returns Blob
-   * @status Proposed integration contract (Phase 2 backend required)
    */
   async downloadCoursePlanPdf(planId: string): Promise<{ blob?: Blob; error?: string }> {
     try {
@@ -283,6 +307,30 @@ class ApiClient {
       return { blob };
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'PDF export service unavailable';
+      return { error: errorMessage };
+    }
+  }
+
+  /**
+   * Institutional DOCX Export Contract
+   * @contract GET /api/curriculum/plans/:planId/docx
+   * @description Streams the generated institutional editable Word (.docx) course plan document
+   * @returns Blob
+   */
+  async downloadCoursePlanDocx(planId: string): Promise<{ blob?: Blob; error?: string }> {
+    try {
+      const response = await fetch(`${this.baseUrl}/curriculum/plans/${encodeURIComponent(planId)}/docx`, {
+        headers: { 'Accept': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' }
+      });
+
+      if (!response.ok) {
+        throw new Error(`DOCX generation endpoint returned HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const blob = await response.blob();
+      return { blob };
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'DOCX export service unavailable';
       return { error: errorMessage };
     }
   }

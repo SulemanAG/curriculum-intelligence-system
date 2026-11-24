@@ -56,10 +56,10 @@ class OrchestrationControllerIntegrationTest {
                 .andExpect(jsonPath("$.data", hasSize(5)))
                 .andExpect(jsonPath("$.data[0].agentId").value("curriculum-mapping-agent"))
                 .andExpect(jsonPath("$.data[0].status").value("IMPLEMENTED"))
-                .andExpect(jsonPath("$.data[1].status").value("REGISTERED_NOT_IMPLEMENTED"))
-                .andExpect(jsonPath("$.data[2].status").value("REGISTERED_NOT_IMPLEMENTED"))
-                .andExpect(jsonPath("$.data[3].status").value("REGISTERED_NOT_IMPLEMENTED"))
-                .andExpect(jsonPath("$.data[4].status").value("REGISTERED_NOT_IMPLEMENTED"));
+                .andExpect(jsonPath("$.data[1].status").value("IMPLEMENTED"))
+                .andExpect(jsonPath("$.data[2].status").value("IMPLEMENTED"))
+                .andExpect(jsonPath("$.data[3].status").value("IMPLEMENTED"))
+                .andExpect(jsonPath("$.data[4].status").value("IMPLEMENTED"));
     }
 
     @Test
@@ -250,16 +250,16 @@ class OrchestrationControllerIntegrationTest {
         assertThat(task1.path("status").asText()).isEqualTo("COMPLETED");
         assertThat(task1.path("outputPayloadJson").asText()).contains("Edge Computing & TinyML");
 
-        // Tasks 2 & 3: industry-skills-agent & academic-benchmarking-agent should be BLOCKED (not implemented)
+        // Tasks 2 & 3: industry-skills-agent & academic-benchmarking-agent should be BLOCKED (no external API key in test environment)
         var task2 = tasksNode.get(1);
         assertThat(task2.path("taskKey").asText()).isEqualTo("task_industry_skills");
         assertThat(task2.path("status").asText()).isEqualTo("BLOCKED");
-        assertThat(task2.path("errorType").asText()).isEqualTo("AGENT_NOT_IMPLEMENTED");
+        assertThat(task2.path("errorType").asText()).isEqualTo("AGENT_BLOCKED");
 
         var task3 = tasksNode.get(2);
         assertThat(task3.path("taskKey").asText()).isEqualTo("task_academic_benchmarking");
         assertThat(task3.path("status").asText()).isEqualTo("BLOCKED");
-        assertThat(task3.path("errorType").asText()).isEqualTo("AGENT_NOT_IMPLEMENTED");
+        assertThat(task3.path("errorType").asText()).isEqualTo("AGENT_BLOCKED");
 
         // Tasks 4 & 5: gap-analysis-agent & recommendation-agent should be BLOCKED due to dependencies
         var task4 = tasksNode.get(3);
