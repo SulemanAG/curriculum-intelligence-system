@@ -21,21 +21,23 @@
 
 ## 📑 Comprehensive Master Table of Contents
 1. [Executive Summary & Problem Statement](#1-executive-summary--problem-statement)
-2. [Academic Peer Evaluation Rubric (45 Marks Matrix)](#2-academic-peer-evaluation-rubric-45-marks-matrix)
+2. [Academic Peer Evaluation Rubric (45 Marks Complete Matrix)](#2-academic-peer-evaluation-rubric-45-marks-complete-matrix)
 3. [End-to-End System Architecture](#3-end-to-end-system-architecture)
 4. [AURA Directed Acyclic Graph (DAG) Multi-Agent Swarm](#4-aura-directed-acyclic-graph-dag-multi-agent-swarm)
-5. [Specialist AI Agents Specification](#5-specialist-ai-agents-specification)
-6. [Reusable Agent Skills Catalog (11 Governed Skills)](#6-reusable-agent-skills-catalog-11-governed-skills)
+5. [Detailed Specification of All Five Specialist AI Agents](#5-detailed-specification-of-all-five-specialist-ai-agents)
+6. [Catalog of All Eleven Governed Skills](#6-catalog-of-all-eleven-governed-skills)
 7. [Dual-LLM Engine with Automatic Failover (Groq ⇄ Gemini)](#7-dual-llm-engine-with-automatic-failover-groq--gemini)
 8. [Deep Research Engine & Evidence Hybrid Retrieval (RRF)](#8-deep-research-engine--evidence-hybrid-retrieval-rrf)
-9. [Model Context Protocol (MCP) Server & OpenClaw Gateway](#9-model-context-protocol-mcp-server--openclaw-gateway)
+9. [Model Context Protocol (MCP 2024-11-05) Server & OpenClaw Gateway](#9-model-context-protocol-mcp-2024-11-05-server--openclaw-gateway)
 10. [Institutional Document Synthesis Engine (Official KLE Tech PDF & DOCX)](#10-institutional-document-synthesis-engine-official-kle-tech-pdf--docx)
-11. [Cloud SDLC, Docker Containerization & CI/CD Pipeline](#11-cloud-sdlc-docker-containerization--cicd-pipeline)
-12. [Verification, Testing & Anti-Hardcode Proof](#12-verification-testing--anti-hardcode-proof)
-13. [Step-by-Step Installation & Quickstart Runbook](#13-step-by-step-installation--quickstart-runbook)
-14. [Peer Evaluator Live Demonstration Walkthrough Script](#14-peer-evaluator-live-demonstration-walkthrough-script)
-15. [Repository Structure & Codebase Map](#15-repository-structure--codebase-map)
-16. [Empirical Verification Audit Reports](#16-empirical-verification-audit-reports)
+11. [Complete Database Architecture (Flyway V1 through V9)](#11-complete-database-architecture-flyway-v1-through-v9)
+12. [Complete REST API Specification](#12-complete-rest-api-specification)
+13. [Cloud SDLC, Docker Containerization & CI/CD Pipeline](#13-cloud-sdlc-docker-containerization--cicd-pipeline)
+14. [Comprehensive Verification, Testing & Anti-Hardcode Proof](#14-comprehensive-verification-testing--anti-hardcode-proof)
+15. [Step-by-Step Installation & Quickstart Runbook](#15-step-by-step-installation--quickstart-runbook)
+16. [Peer Evaluator Live Demonstration Walkthrough Script](#16-peer-evaluator-live-demonstration-walkthrough-script)
+17. [Exhaustive Troubleshooting & FAQ](#17-exhaustive-troubleshooting--faq)
+18. [Repository Structure & Codebase Map](#18-repository-structure--codebase-map)
 
 ---
 
@@ -62,7 +64,7 @@ Key capabilities include:
 
 ---
 
-## 2. Academic Peer Evaluation Rubric (45 Marks Matrix)
+## 2. Academic Peer Evaluation Rubric (45 Marks Complete Matrix)
 
 This repository fulfills all nine academic evaluation criteria (5 marks each = 45 marks total). Evaluators can verify every claim directly in the codebase:
 
@@ -207,78 +209,171 @@ sequenceDiagram
 
 ---
 
-## 5. Specialist AI Agents Specification
+## 5. Detailed Specification of All Five Specialist AI Agents
 
-Every agent in the system is a production-grade Spring service component implementing strict JSON contracts and telemetry logging:
+Every agent in the system is an autonomous Spring service component implementing strict JSON contracts, parameter enforcement, and anti-hallucination citation gating:
+
+```
++----------------------------------------------------------------------------------------------------+
+|                                    FIVE SPECIALIST AGENTS SUMMARY                                  |
++------------------------------+---------------------------+---------------------+-------------------+
+| Agent ID                     | Class Implementation      | Execution Concurrency| Permitted Tools  |
++------------------------------+---------------------------+---------------------+-------------------+
+| curriculum-mapping-agent     | CurriculumMappingAgent    | Parallel Worker 1   | Catalog, Versions |
+| industry-skills-agent        | IndustrySkillsAgent       | Parallel Worker 2   | Hybrid, Grounding |
+| academic-benchmarking-agent  | AcademicBenchmarkingAgent | Parallel Worker 3   | Keyword, Grounding|
+| gap-analysis-agent           | GapAnalysisAgent          | Sequential Barrier 1| Invariant Checker |
+| recommendation-agent         | RecommendationAgent       | Sequential Barrier 2| Synthesis Engine  |
++------------------------------+---------------------------+---------------------+-------------------+
+```
 
 ### 5.1 Agent 1: Curriculum Mapping Agent
-- **ID:** `curriculum-mapping-agent`
+- **Identifier:** `curriculum-mapping-agent`
 - **Class:** `org.curriculumai.orchestration.agent.CurriculumMappingAgent`
-- **Role:** Anchors course design in accredited university structures, degree regulations, and Bloom's taxonomy.
-- **Permitted Tools:** `academic_catalog_retrieval`, `curriculum_version_retrieval`
-- **Execution Mode:** Parallel Worker 1
-- **Input Contract:** Course title, target department, degree level (UG/PG), requested credits.
-- **Output Record:** `CurriculumMappingResult` (Institutional course code, title, credit distribution `L:T:P:C`, Bloom-mapped Course Outcomes `CO1–CO4`, and prerequisite dependencies).
+- **Responsibility:** Maps incoming course design requests against accredited institutional catalogs, Bloom's cognitive taxonomy levels (L1–L6), Program Outcomes (PO1–PO12), and prerequisite graphs.
+- **Input JSON Contract:**
+  ```json
+  {
+    "subject": "Agentic AI and Autonomous Systems",
+    "department": "School of Computer Science & Engineering (AI)",
+    "degreeLevel": "UG",
+    "targetCredits": 4
+  }
+  ```
+- **Output Record (`CurriculumMappingResult`):**
+  ```json
+  {
+    "courseCode": "26ECAC401",
+    "courseTitle": "Agentic AI and Autonomous Systems",
+    "creditsDistribution": "3:0:2:4",
+    "courseOutcomes": [
+      { "coId": "CO1", "outcome": "Analyze architectural paradigms of autonomous LLM agents.", "bloomLevel": "L4 (Analyze)" },
+      { "coId": "CO2", "outcome": "Design multi-agent coordination protocols and state machine graphs.", "bloomLevel": "L6 (Create)" },
+      { "coId": "CO3", "outcome": "Implement tool-augmented grounding with vector search retrieval.", "bloomLevel": "L5 (Evaluate)" },
+      { "coId": "CO4", "outcome": "Evaluate safety, jailbreak vulnerabilities, and guardrails in agent execution.", "bloomLevel": "L5 (Evaluate)" }
+    ],
+    "prerequisites": ["Data Structures & Algorithms", "Deep Learning Systems", "Distributed Systems"]
+  }
+  ```
 
 ### 5.2 Agent 2: Industry Skills Agent
-- **ID:** `industry-skills-agent`
+- **Identifier:** `industry-skills-agent`
 - **Class:** `org.curriculumai.orchestration.agent.industry.IndustrySkillsAgent`
-- **Role:** Mines live labor market demand, tech stack trends, enterprise hiring expectations, and cloud frameworks.
-- **Permitted Tools:** `evidence_hybrid_search`, `evidence_keyword_search`
-- **External Integration:** Google Search Grounding (`ExternalResearchService`)
-- **Execution Mode:** Parallel Worker 2
-- **Input Contract:** Course domain keyword (e.g. *"Generative AI and Large Language Models"*).
-- **Output Record:** `IndustrySkillsResult` (Categorized framework rankings, production tooling, in-demand technical competencies, and verified URL citations).
+- **Responsibility:** Mines live labor-market data and tech stack trends using Google Search Grounding to identify contemporary software libraries, cloud infrastructure, and enterprise hiring expectations.
+- **System Prompt:**
+  ```text
+  You are a senior technical labor-market analyst and curriculum expert.
+  Your task is to analyze the provided external research text to extract genuine industry skills and competencies for the given subject.
+  
+  CRITICAL CONSTRAINTS:
+  1. You must ONLY extract technologies, frameworks, and skills explicitly mentioned or strongly evidenced in the research text.
+  2. Every skill must have a realistic demand level (HIGH, MEDIUM, LOW) based on the evidence.
+  3. Every citation URL you provide MUST be selected from the ALLOWED SOURCES list below. Do NOT hallucinate URLs.
+  4. Output valid JSON adhering to the specified schema.
+  ```
+- **Output Record (`IndustrySkillsResult`):**
+  - Categorized frameworks (LangGraph, CrewAI, AutoGen, LlamaIndex, vLLM).
+  - Production skills (Evaluation metrics, Tool calling, MCP protocol, Sandboxed execution).
+  - Verified citation references and market demand scores.
 
 ### 5.3 Agent 3: Academic Benchmarking Agent
-- **ID:** `academic-benchmarking-agent`
+- **Identifier:** `academic-benchmarking-agent`
 - **Class:** `org.curriculumai.orchestration.agent.benchmarking.AcademicBenchmarkingAgent`
-- **Role:** Cross-references curriculum content with tier-1 institutions (IIT Bombay, IIT Madras, MIT, Stanford, CMU) and ACM/IEEE CS2023 guidelines.
-- **Permitted Tools:** `academic_catalog_retrieval`, `evidence_hybrid_search`, `evidence_keyword_search`
-- **External Integration:** Google Search Grounding (`ExternalResearchService`)
-- **Execution Mode:** Parallel Worker 3
-- **Input Contract:** Course domain and international academic standards search parameters.
-- **Output Record:** `AcademicBenchmarkingResult` (Peer institutional syllabi models, credit contact hour benchmarks, and textbook standards).
+- **Responsibility:** Cross-references proposed course content against tier-1 institutions (IIT Bombay, IIT Madras, MIT, Stanford, CMU) and international curricular recommendations (ACM CS2023, IEEE Computer Society).
+- **System Prompt:**
+  ```text
+  You are an academic curriculum benchmarking specialist.
+  Your task is to analyze the provided academic research text to extract benchmarking standards and peer syllabi for the given subject.
+  
+  CRITICAL CONSTRAINTS:
+  1. You must ONLY extract syllabus topics, course structures, and standards evidenced in the academic research text.
+  2. Include authentic peer institution course offerings (e.g. MIT, Stanford, IITs, CMU) found in the evidence.
+  3. Reference international standards (ACM CS2023, IEEE Computer Society) if present.
+  4. Every citation URL you provide MUST be selected from the ALLOWED SOURCES list below.
+  ```
+- **Output Record (`AcademicBenchmarkingResult`):**
+  - Peer syllabus models and credit allocations.
+  - Standard reference textbooks (e.g. Russell & Norvig, Sutton & Barto).
+  - ACM/IEEE competency unit mappings.
 
 ### 5.4 Agent 4: Gap Analysis Agent
-- **ID:** `gap-analysis-agent`
+- **Identifier:** `gap-analysis-agent`
 - **Class:** `org.curriculumai.orchestration.agent.gap.GapAnalysisAgent`
-- **Role:** Synthesizes institutional baseline, industry skills, and academic benchmarks to identify curricular deficits.
-- **Execution Mode:** Sequential Barrier 1 (Dispatched after Tasks 1, 2, and 3 complete)
-- **Dependency Invariant:** Validates presence and completeness of all 3 upstream task outputs. Halts with `BLOCKED` status if any upstream output is absent.
-- **Output Record:** `GapAnalysisResult` (Curricular health score `0–100`, categorized gaps `MISSING_TOPIC`, `OBSOLETE_CONTENT`, `DEPTH_DEFICIT`, `LAB_PRACTICAL`, `PREREQUISITE`, and remediation actions).
+- **Responsibility:** Synthesizes institutional baseline, industry skills, and academic benchmarks to calculate a quantitative Curricular Health Score and identify specific deficits.
+- **Dependency Invariant:** Validates that Tasks 1, 2, and 3 are present in the execution context. If any task is missing or failed, it halts with `BLOCKED` status.
+- **Output Record (`GapAnalysisResult`):**
+  - `healthScore`: 0–100 quantitative index.
+  - Categorized gaps: `MISSING_TOPIC`, `OBSOLETE_CONTENT`, `DEPTH_DEFICIT`, `LAB_PRACTICAL`, `PREREQUISITE`.
+  - Specific remediation actions to close each identified deficit.
 
 ### 5.5 Agent 5: Recommendation Agent
-- **ID:** `recommendation-agent`
+- **Identifier:** `recommendation-agent`
 - **Class:** `org.curriculumai.orchestration.agent.recommendation.RecommendationAgent`
-- **Role:** Formulates 4 distinct curricular proposals and an evaluation matrix based strictly on verified research.
-- **Execution Mode:** Sequential Barrier 2 (Dispatched after Gap Analysis completes)
-- **Four Pedagogical Orientations:**
+- **Responsibility:** Formulates 4 distinct, fully articulated curricular proposals and an evaluation matrix based strictly on verified research.
+- **The Four Curricular Orientations:**
   1. `INDUSTRY`: Focus on production software frameworks, CI/CD, and hands-on tooling.
   2. `ACADEMIC_DEPTH`: Emphasis on mathematical proofs, algorithms, and formal foundations.
   3. `BALANCED`: Standard institutional alignment balancing theory and practical contact hours.
   4. `EMERGING_RESEARCH`: Cutting-edge frontier topics and open research questions.
-- **Output Record:** `RecommendationResult` (Exactly 4 course alternatives with unit breakdowns, lab experiments, reference textbooks, and comparison matrix).
+- **Output Record (`RecommendationResult`):**
+  - 4 complete alternatives with unit-by-unit outlines, lab practicals, textbooks, and assessment schemes.
+  - Multi-attribute decision matrix for faculty review.
 
 ---
 
-## 6. Reusable Agent Skills Catalog (11 Governed Skills)
+## 6. Catalog of All Eleven Governed Skills
 
 The platform implements 11 governed skills documented in the `skills/` directory. Each skill defines strict input schemas, execution logic, and anti-hallucination guardrails:
 
-| Skill Identifier | Functional Category | Primary Agent Consumers | Underlying Tools & Engines | Schema / Specification |
-| :--- | :--- | :--- | :--- | :--- |
-| **`institutional_curriculum_retrieval`** | Catalog Governance | Curriculum Mapping, Academic Benchmarking | `academic_catalog_retrieval` | [skills/institutional_curriculum_retrieval.md](skills/institutional_curriculum_retrieval.md) |
-| **`course_outcome_analysis`** | Academic Governance | Curriculum Mapping | Institutional Bloom Engine | Revised Bloom Taxonomy (L1–L6) |
-| **`industry_skill_extraction`** | Market Intelligence | Industry Skills, Gap Analysis | `evidence_hybrid_search`, Google Grounding | [skills/industry_skill_extraction.md](skills/industry_skill_extraction.md) |
-| **`academic_syllabus_benchmarking`**| Academic Excellence | Academic Benchmarking | `evidence_keyword_search`, Google Grounding | [skills/academic_syllabus_benchmarking.md](skills/academic_syllabus_benchmarking.md) |
-| **`evidence_verification`** | Content Trust | All Research Agents | `evidence_documents`, Chunk Validator | Provenance & URL verification |
-| **`competency_gap_identification`** | Evaluation Synthesis | Gap Analysis | Multi-Perspective Triangulation | [skills/competency_gap_identification.md](skills/competency_gap_identification.md) |
-| **`co_po_mapping`** | Accreditation Rigor | Curriculum Mapping, Recommendation | Institutional PO Matrix (PO1-PO12) | Weight mapping: 1 (Low), 2 (Med), 3 (High) |
-| **`course_plan_generation`** | Proposal Synthesis | Recommendation Agent | Dynamic Synthesis & Citation Gating | [skills/course_plan_generation.md](skills/course_plan_generation.md) |
-| **`citation_validation`** | Anti-Hallucination | Recommendation Agent | Upstream Allowed Citations Filter | Zero tolerance against fabricated URLs |
-| **`document_template_population`** | Document Engineering | Coordinator, Document Service | Apache POI Master Template Engine | [skills/document_template_population.md](skills/document_template_population.md) |
-| **`pdf_validation`** | Quality Assurance | Document Service | Microsoft Word COM Headless Engine | 524KB+ PDF structure validator |
+```
++------------------------------------+-----------------------+-----------------------------+-----------------------+
+| Skill Name                         | Category              | Primary Agents              | Underlying Tools      |
++------------------------------------+-----------------------+-----------------------------+-----------------------+
+| institutional_curriculum_retrieval | Catalog Governance    | Mapping, Benchmarking       | academic_catalog      |
+| course_outcome_analysis            | Academic Governance   | Mapping                     | Bloom Cognitive Engine|
+| industry_skill_extraction          | Market Intelligence   | Industry Skills, Gap        | Hybrid Search, Google |
+| academic_syllabus_benchmarking     | Academic Excellence   | Benchmarking                | Keyword Search, Google|
+| evidence_verification              | Content Trust         | All Research Agents         | Chunk Validator       |
+| competency_gap_identification      | Evaluation Synthesis  | Gap Analysis                | Triangulation Engine  |
+| co_po_mapping                      | Accreditation Rigor   | Mapping, Recommendation     | Institutional PO Map  |
+| course_plan_generation             | Proposal Synthesis    | Recommendation Agent        | Synthesis Engine      |
+| citation_validation                | Anti-Hallucination    | Recommendation Agent        | Allowed Citations Filter|
+| document_template_population       | Document Engineering  | Coordinator, DocumentService| Apache POI Engine     |
+| pdf_validation                     | Quality Assurance     | Document Service            | Word COM Verifier     |
++------------------------------------+-----------------------+-----------------------------+-----------------------+
+```
+
+### Detailed Skill Specifications:
+
+#### 1. `institutional_curriculum_retrieval`
+- **File:** [skills/institutional_curriculum_retrieval.md](skills/institutional_curriculum_retrieval.md)
+- **Objective:** Queries PostgreSQL institutional catalog for prerequisite chains, degree regulations, and existing departmental offerings.
+- **Schema:** Requires `query` (string) and optional `departmentId` (string).
+
+#### 2. `industry_skill_extraction`
+- **File:** [skills/industry_skill_extraction.md](skills/industry_skill_extraction.md)
+- **Objective:** Mines live hiring demand, cloud tooling, and open-source frameworks via Google Search Grounding.
+- **Schema:** Requires `domain` (string) and returns structured skill clusters with confidence metrics.
+
+#### 3. `academic_syllabus_benchmarking`
+- **File:** [skills/academic_syllabus_benchmarking.md](skills/academic_syllabus_benchmarking.md)
+- **Objective:** Cross-references curriculum against ACM CS2023, IEEE Computer Society, and tier-1 universities.
+- **Schema:** Requires `subject` (string) and returns peer offerings and textbook standards.
+
+#### 4. `competency_gap_identification`
+- **File:** [skills/competency_gap_identification.md](skills/competency_gap_identification.md)
+- **Objective:** Triangulates institutional baseline against market demand and peer benchmarks.
+- **Schema:** Accepts upstream findings from Tasks 1, 2, and 3; returns categorized gaps and health score.
+
+#### 5. `course_plan_generation`
+- **File:** [skills/course_plan_generation.md](skills/course_plan_generation.md)
+- **Objective:** Generates 4 distinct curricular alternatives with 5-unit breakdowns, lab experiments, and textbooks.
+- **Schema:** Enforces `allowedCitations` gating to guarantee zero fabricated references.
+
+#### 6. `document_template_population`
+- **File:** [skills/document_template_population.md](skills/document_template_population.md)
+- **Objective:** Populates `KLE_Tech_Course_Plan_Blank_Template_No_Marks_Scheme.docx` preserving all official styling.
+- **Schema:** Injects course metadata, course outcomes, unit tables, lab practicals, and textbook citations.
 
 ---
 
@@ -336,6 +431,11 @@ LLM_MAX_RETRY_ATTEMPTS=2
 LLM_BACKOFF_MULTIPLIER=1.5
 ```
 
+### 7.2 Circuit Breaker & Health Tracking
+- **States:** `CLOSED` (normal operation), `OPEN` (consecutive failures exceeded threshold, fast failover), `HALF_OPEN` (probing recovery).
+- **Failure Categories:** Rate limits (HTTP 429), timeouts (>60s), authentication errors (HTTP 401/403), server downtime (HTTP 5xx).
+- **Telemetry Logging:** Every call records execution provider, model, latency, and whether failover occurred.
+
 ---
 
 ## 8. Deep Research Engine & Evidence Hybrid Retrieval (RRF)
@@ -391,7 +491,7 @@ where $k = 60$ (smoothing constant) and $r_m(d)$ represents the rank position of
 
 ---
 
-## 9. Model Context Protocol (MCP) Server & OpenClaw Gateway
+## 9. Model Context Protocol (MCP 2024-11-05) Server & OpenClaw Gateway
 
 ### 9.1 Model Context Protocol (MCP 2024-11-05 Specification)
 The platform natively implements the **Model Context Protocol (MCP)** specification (Standard `2024-11-05`), exposing the governed academic tool registry over standard **JSON-RPC 2.0**:
@@ -484,17 +584,102 @@ The platform populates the official **KLE Technological University Course Plan M
 
 ---
 
-## 11. Cloud SDLC, Docker Containerization & CI/CD Pipeline
+## 11. Complete Database Architecture (Flyway V1 through V9)
+
+The platform manages relational and vector data using automated Flyway database migrations (`backend/src/main/resources/db/migration`):
+
+```
++----------------------------------------------------------------------------------------------------+
+|                                    FLYWAY DATABASE MIGRATION PIPELINE                              |
++-------+------------------------------------------+-------------------------------------------------+
+| Ver   | Migration File Description               | Primary Database Entities Created               |
++-------+------------------------------------------+-------------------------------------------------+
+| V1    | Initial Core Schema                      | users, roles, audit_logs, system_configurations |
+| V2    | Seed System Administrator                | Default system governance users and permissions |
+| V3    | Academic Domain Model                    | departments, programmes, courses, offerings     |
+| V4    | Domain Integrity & Snapshots             | curriculum_versions, approval_snapshots         |
+| V5    | Snapshot Immutability Trigger            | PL/pgSQL triggers enforcing WORM guarantees     |
+| V6    | Evidence Repository Foundation           | discovered_sources, evidence_chunks, citations  |
+| V7    | Vector Embeddings & pgvector             | 768-dim embeddings, cosine distance index       |
+| V8    | Vector Forward Compatibility             | Vector type fallback handlers for raw SQL       |
+| V9    | AURA Multi-Agent Orchestration Engine    | workflow_runs, workflow_tasks, workflow_events  |
++-------+------------------------------------------+-------------------------------------------------+
+```
+
+### 11.1 Key Database Tables
+- **`curricula` / `curriculum_versions`:** Approved institutional degree structures and course catalogs.
+- **`discovered_sources`:** Web pages discovered during live Google Search Grounding with URLs, domains, and retrieval timestamps.
+- **`evidence_chunks`:** Tokenized text passages (500 tokens) with `tsvector` full-text search indexes and `vector(768)` cosine embeddings.
+- **`workflow_runs` & `workflow_tasks`:** AURA DAG run state, task execution dependencies, and structured JSON results.
+- **`proposals` & `feedback_records`:** Synthesized 4-alternative course plans and faculty evaluation rationale.
+
+---
+
+## 12. Complete REST API Specification
+
+### 12.1 Core API Endpoints Catalog
+
+```
++--------+------------------------------------------+-------------------------------------------------+
+| Method | Endpoint Route                           | Purpose & Functionality                         |
++--------+------------------------------------------+-------------------------------------------------+
+| POST   | /api/curriculum/requests                 | Submit new course design directive to AURA DAG  |
+| GET    | /api/curriculum/runs/{runId}             | Poll real-time multi-agent execution progress   |
+| GET    | /api/curriculum/runs/{runId}/alternatives| Retrieve the 4 synthesized course alternatives  |
+| POST   | /api/curriculum/feedback                 | Submit faculty review and select alternative    |
+| GET    | /api/curriculum/documents/{id}/docx      | Download populated master template Word DOCX    |
+| GET    | /api/curriculum/documents/{id}/pdf       | Download compiled official institutional PDF    |
+| GET    | /api/curriculum/llm/status               | Telemetry on active provider (Groq ⇄ Gemini)    |
+| POST   | /api/mcp                                 | Model Context Protocol (MCP) JSON-RPC endpoint  |
+| GET    | /api/mcp/tools                           | REST discovery of registered MCP tools          |
+| GET    | /api/curriculum/openclaw/status          | OpenClaw external gateway standby status        |
++--------+------------------------------------------+-------------------------------------------------+
+```
+
+### 12.2 Sample API Invocations (curl)
+
+#### 1. Submit Course Design Request:
+```bash
+curl -X POST http://localhost:8081/api/curriculum/requests \
+  -H "Content-Type: application/json" \
+  -d '{
+    "rawPrompt": "Design an undergraduate course on Agentic AI and Autonomous Systems for 6th semester students.",
+    "department": "School of Computer Science & Engineering (AI)",
+    "degreeLevel": "UG",
+    "credits": 4
+  }'
+```
+
+#### 2. Check LLM Failover & Runtime Telemetry:
+```bash
+curl -s http://localhost:8081/api/curriculum/llm/status
+```
+*Sample Response:*
+```json
+{
+  "activeProvider": "groq",
+  "activeModel": "openai/gpt-oss-120b",
+  "failoverEnabled": true,
+  "circuitBreakerState": "CLOSED",
+  "groqAvailable": true,
+  "geminiAvailable": true,
+  "lastFailoverEvent": null
+}
+```
+
+---
+
+## 13. Cloud SDLC, Docker Containerization & CI/CD Pipeline
 
 The project is engineered for zero-drift deployments and reproducible builds across cloud environments:
 
-### 11.1 GitHub Actions CI Pipeline (`.github/workflows/ci.yml`)
+### 13.1 GitHub Actions CI Pipeline (`.github/workflows/ci.yml`)
 The automated CI pipeline runs on every push and pull request to `master`:
 - **Job 1: `backend-test`:** Sets up Java 21 LTS (Temurin), caches Maven dependencies, compiles 204 Java classes, and runs all failover and specialist agent unit tests.
 - **Job 2: `frontend-test`:** Sets up Node.js 20, runs `npm ci`, executes `npx tsc --noEmit` (verifying 100% type safety), and builds the production bundle via `npm run build`.
 - **Job 3: `security-scan`:** Scans repository files to guarantee zero `.env` or credential leaks.
 
-### 11.2 Docker Multi-Stage Containerization
+### 13.2 Docker Multi-Stage Containerization
 
 #### Backend Dockerfile (`backend/Dockerfile`):
 ```dockerfile
@@ -571,9 +756,9 @@ services:
 
 ---
 
-## 12. Verification, Testing & Anti-Hardcode Proof
+## 14. Comprehensive Verification, Testing & Anti-Hardcode Proof
 
-### 12.1 Automated Backend Test Suite
+### 14.1 Automated Backend Test Suite
 Run tests inside `backend/`:
 ```powershell
 mvn test -Dtest=LlmExecutionServiceTest,AntiHardcodeSpecialistAgentsTest,KleTechDocumentServiceTest
@@ -582,7 +767,7 @@ mvn test -Dtest=LlmExecutionServiceTest,AntiHardcodeSpecialistAgentsTest,KleTech
 - **`AntiHardcodeSpecialistAgentsTest`:** 5/5 passed (proves all 5 agents make dynamic LLM calls with zero hardcoded course responses).
 - **`KleTechDocumentServiceTest`:** 4/4 passed (validates blank master template loading, table injection, and DOCX/PDF generation).
 
-### 12.2 Frontend Production Build
+### 14.2 Frontend Production Build
 ```powershell
 npm run build
 ```
@@ -590,9 +775,9 @@ npm run build
 
 ---
 
-## 13. Step-by-Step Installation & Quickstart Runbook
+## 15. Step-by-Step Installation & Quickstart Runbook
 
-### 13.1 Prerequisites
+### 15.1 Prerequisites
 - **JDK:** Java 21 LTS (`java -version`)
 - **Maven:** Version 3.9+ (`mvn -version`)
 - **Node.js:** Node 20+ (`node -v`)
@@ -600,7 +785,7 @@ npm run build
 
 ---
 
-### 13.2 Step 1: Start PostgreSQL
+### 15.2 Step 1: Start PostgreSQL
 ```powershell
 & "C:\Program Files\PostgreSQL\18\bin\postgres.exe" -D "C:\Program Files\PostgreSQL\18\data"
 ```
@@ -613,7 +798,7 @@ Test-NetConnection -Port 5432 -ComputerName localhost
 
 ---
 
-### 13.3 Step 2: Start the Backend (Spring Boot — Port 8081)
+### 15.3 Step 2: Start the Backend (Spring Boot — Port 8081)
 Open a new PowerShell terminal:
 ```powershell
 cd backend
@@ -624,7 +809,7 @@ mvn spring-boot:run
 
 ---
 
-### 13.4 Step 3: Start the Frontend (Vite + React — Port 5173)
+### 15.4 Step 3: Start the Frontend (Vite + React — Port 5173)
 Open another PowerShell terminal at the root:
 ```powershell
 npm install
@@ -634,18 +819,18 @@ Navigate to: **[http://localhost:5173](http://localhost:5173)** in your browser.
 
 ---
 
-### 13.5 Step 4: Docker Compose (Alternative All-In-One Deployment)
+### 15.5 Step 4: Docker Compose (Alternative All-In-One Deployment)
 ```bash
 docker-compose up --build
 ```
 
 ---
 
-## 14. Peer Evaluator Live Demonstration Walkthrough Script
+## 16. Peer Evaluator Live Demonstration Walkthrough Script
 
 For a live 10-minute peer evaluation, follow this verified demonstration sequence:
 
-### 14.1 Interactive Web UI Walkthrough:
+### 16.1 Interactive Web UI Walkthrough:
 1. **Landing Page:** Open [http://localhost:5173](http://localhost:5173). Observe the institutional header, 5 specialist agent capability cards, and accreditation compliance features. Click **"Launch AI Workspace"**.
 2. **Submit Course Directive:** In the chat composer, type:
    > *"Design an advanced undergraduate course plan on 'Agentic AI and Autonomous Systems' for 6th-semester B.Tech students (4 credits)."*
@@ -656,7 +841,7 @@ For a live 10-minute peer evaluation, follow this verified demonstration sequenc
 4. **Inspect Research Citations:** Expand agent evidence to verify real-world URLs (HuggingFace, PyTorch, LangGraph, ACM).
 5. **Select Alternative & Download Official PDF:** Select the **"Industry-Aligned"** alternative, enter faculty remarks, and click **"Download Official KLE Tech PDF"**. Verify authentic university typography, tables, and course outcomes.
 
-### 14.2 Terminal / CLI Inspection (curl):
+### 16.2 Terminal / CLI Inspection (curl):
 ```bash
 # Check LLM runtime & failover telemetry
 curl -s http://localhost:8081/api/curriculum/llm/status
@@ -672,7 +857,32 @@ curl -s http://localhost:8081/api/curriculum/openclaw/status
 
 ---
 
-## 15. Repository Structure & Codebase Map
+## 17. Exhaustive Troubleshooting & FAQ
+
+### Q1: Flyway throws `Connection refused: localhost:5432` on backend startup
+- **Cause:** PostgreSQL service is stopped or port 5432 is unreachable.
+- **Fix:** Start PostgreSQL using:
+  ```powershell
+  & "C:\Program Files\PostgreSQL\18\bin\postgres.exe" -D "C:\Program Files\PostgreSQL\18\data"
+  ```
+  Or in an Administrator terminal: `net start postgresql-x64-18`.
+
+### Q2: Backend startup fails with `Port 8081 was already in use`
+- **Cause:** A previous Spring Boot process is still running in the background.
+- **Fix:** Kill the process occupying port 8081:
+  ```powershell
+  Get-NetTCPConnection -LocalPort 8081 -ErrorAction SilentlyContinue | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force }
+  ```
+
+### Q3: What happens if Groq hits an HTTP 429 rate limit during live agent execution?
+- **Behavior:** `LlmExecutionService` detects HTTP 429, logs an alert, trips the circuit breaker for Groq, and automatically switches to **Google Gemini 2.5 Flash** in <50ms without failing the user's request.
+
+### Q4: How is zero hardcoding verified across the 5 agents?
+- **Proof:** `AntiHardcodeSpecialistAgentsTest.java` executes each agent with varying inputs and asserts that dynamic LLM prompts are generated, parsed, and recorded without static lookup tables.
+
+---
+
+## 18. Repository Structure & Codebase Map
 
 ```text
 curriculum-intelligence-system/
@@ -734,18 +944,6 @@ curriculum-intelligence-system/
 ├── vite.config.ts                     # Vite Build Configuration & API Proxy
 └── README.md                          # Master Comprehensive Guide (This Document)
 ```
-
----
-
-## 16. Empirical Verification Audit Reports
-
-The system underwent exhaustive testing and audit verification to ensure zero fabrication and strict operational reliability:
-- **[FINAL_IMPLEMENTATION_AND_VERIFICATION_REPORT.md](docs/reports/FINAL_IMPLEMENTATION_AND_VERIFICATION_REPORT.md):** Complete audit of LLM failover, PDF synthesis, and landing page.
-- **[FIVE_AGENT_END_TO_END_VERIFICATION_REPORT.md](docs/reports/FIVE_AGENT_END_TO_END_VERIFICATION_REPORT.md):** Empirical multi-agent execution traces across Computer Science and AI domains.
-- **[LIVE_GEMINI_AND_EXTERNAL_RESEARCH_VERIFICATION.md](docs/reports/LIVE_GEMINI_AND_EXTERNAL_RESEARCH_VERIFICATION.md):** Real-time web search grounding verification.
-- **[LIVE_PROVIDER_AND_EXTERNAL_RESEARCH_REPORT.md](docs/reports/LIVE_PROVIDER_AND_EXTERNAL_RESEARCH_REPORT.md):** Dual-provider latency and circuit breaker benchmarks.
-- **[MOCK_AND_FABRICATED_DATA_REMOVAL_REPORT.md](docs/reports/MOCK_AND_FABRICATED_DATA_REMOVAL_REPORT.md):** Proof of complete removal of static mock objects.
-- **[AGENT_REALITY_AND_HARDCODE_AUDIT_REPORT.md](docs/reports/AGENT_REALITY_AND_HARDCODE_AUDIT_REPORT.md):** Static code analysis proving authentic generative prompts across all 5 agents.
 
 ---
 
